@@ -1,0 +1,87 @@
+#!/bin/bash
+# helper script for common used commands in this project
+
+APP_NAME=webpack-starter
+APP_MODULES="jszip file-saver"
+APP_DEV_MODULES=""
+
+update_package_json() {
+  echo "const fs = require('fs'), PKG='package.json', pkg = JSON.parse(fs.readFileSync(PKG, 'utf8'))
+pkg.name = '$APP_NAME'
+pkg.main = 'src/index.js'
+pkg.type = 'module'
+pkg.engines = { node : '>=8.0.0' }
+fs.writeFileSync(PKG, JSON.stringify(pkg, null, 2));
+" | node -
+}
+
+app_init() { 
+  yarn init -y
+  yarn add $APP_MODULES
+  yarn add -D webpack raw-loader copy-webpack-plugin html-minifier $APP_DEV_MODULES
+  update_package_json
+}
+
+app_reset() {
+  rm -rf ./node_modules ./dist
+  rm package.json yarn.lock package-lock.json yarn-error.log
+}
+
+app_setup() {
+  update_package_json
+  yarn install
+}
+
+app_build() {
+  node webpack-int.js build $1
+}
+
+app_serve() {
+  set -a
+  # source .env
+  node webpack-int.js watch
+  set +a
+}
+
+app_prodrun() {
+  set -a
+  node webpack-int.js build --mode=prod
+  ./node_modules/.bin/html-minifier --collapse-whitespace --remove-comments --remove-optional-tags \
+    --remove-redundant-attributes --remove-script-type-attributes --remove-tag-whitespace \
+    --use-short-doctype --minify-css true --minify-js true \
+    -o ./dist/index.html ./static/index.html
+  cd dist
+  node ../webpack-httpserver.js
+  set +a
+}
+
+app_deploy_staging() {
+  # TODO - write script to deploy app
+  echo "todo"
+}
+
+app_deploy_prod() {
+  # TODO - write script to deploy app
+  echo "todo"
+}
+
+app_test() {
+  set -a
+  # source .env
+  node webpack-int.js build --mode=prod
+  cd dist
+  node ../webpack-httpserver.js
+  set +a
+}
+
+if [ "$1" == "init" ]; then app_init; exit; fi
+if [ "$1" == "reset" ]; then app_reset; exit; fi
+if [ "$1" == "setup" ]; then app_setup; exit; fi
+if [ "$1" == "prod-build" ]; then app_build --mode=prod; exit; fi
+if [ "$1" == "prod" ]; then app_prodrun; exit; fi
+if [ "$1" == "serve" ]; then app_serve; exit; fi
+if [ "$1" == "deploy-staging" ]; then app_deploy_heroku; exit; fi
+if [ "$1" == "deploy-prod" ]; then app_deploy_prod; exit; fi
+if [ "$1" == "test" ]; then app_test; exit; fi
+
+echo "Command does not exist"
