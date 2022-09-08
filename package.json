@@ -5,7 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "file-saver": "^2.0.2",
-    "jszip": "^3.2.2"
+    "jszip": "^3.7.0"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^5.1.1",
